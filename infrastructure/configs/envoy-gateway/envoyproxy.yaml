@@ -15,3 +15,4 @@ spec:
               name: eg-envoy
             spec:
               type: ClusterIP
+              externalTrafficPolicy: null
