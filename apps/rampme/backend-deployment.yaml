@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rampme-backend
+  namespace: rampme
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rampme-backend
+  template:
+    metadata:
+      labels:
+        app: rampme-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-0 # {"$imagepolicy": "rampme:rampme-backend"}
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: rampme-backend-secret
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rampme-backend-data

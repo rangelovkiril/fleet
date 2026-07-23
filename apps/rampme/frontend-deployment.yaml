@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rampme-frontend
+  namespace: rampme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rampme-frontend
+  template:
+    metadata:
+      labels:
+        app: rampme-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/rangelovkiril/hacktues12-frontend:prod-0 # {"$imagepolicy": "rampme:rampme-frontend"}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: BACKEND_URL
+              value: http://rampme-backend:3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10

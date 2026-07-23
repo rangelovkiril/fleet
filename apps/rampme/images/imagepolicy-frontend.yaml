@@ -1,0 +1,14 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: rampme-frontend
+  namespace: rampme
+spec:
+  imageRepositoryRef:
+    name: rampme-frontend
+  filterTags:
+    pattern: '^prod-(?P<ts>[0-9]+)$'
+    extract: '$ts'
+  policy:
+    numerical:
+      order: asc

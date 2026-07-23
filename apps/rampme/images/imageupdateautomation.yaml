@@ -1,0 +1,29 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: rampme
+  namespace: rampme
+spec:
+  interval: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: flux-image-updater@users.noreply.github.com
+        name: flux-image-updater
+      messageTemplate: |
+        chore(rampme): auto-update image tags
+
+        {{range .Updated.Images}}- {{.}}
+        {{end}}
+    push:
+      branch: main
+  update:
+    path: ./apps/rampme
+    strategy: Setters
