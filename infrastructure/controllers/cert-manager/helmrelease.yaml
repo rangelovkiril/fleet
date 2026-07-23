@@ -17,3 +17,6 @@ spec:
   values:
     crds:
       enabled: true
+    config:
+      gatewayAPI:
+        enabled: true

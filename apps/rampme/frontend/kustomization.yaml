@@ -5,3 +5,4 @@ resources:
   - service.yaml
   - imagerepository.yaml
   - imagepolicy.yaml
+  - httproute.yaml
