@@ -16,7 +16,7 @@ spec:
     commit:
       author:
         email: flux-fleet-app[bot]@users.noreply.github.com
-        name: flux-fleet-app[bot]
+        name: flux-fleet-app
       messageTemplate: |
         chore(rampme): auto-update image tags
 
