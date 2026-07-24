@@ -3,5 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - backend
-  - frontend
   - imageupdateautomation.yaml
