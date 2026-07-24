@@ -20,8 +20,9 @@ spec:
       messageTemplate: |
         chore(rampme): auto-update image tags
 
-        {{range .Updated.Images}}- {{.}}
-        {{end}}
+        {{ range $resource, $changes := .Changed.Objects -}}
+        - {{ $resource.Name }}: {{ range $changes }}{{ .OldValue }} -> {{ .NewValue }}{{ end }}
+        {{ end -}}
     push:
       branch: main
   update:
