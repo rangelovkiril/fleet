@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260724181336 # {"$imagepolicy": "rampme:rampme-backend"}
+          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260724184749 # {"$imagepolicy": "rampme:rampme-backend"}
           ports:
             - containerPort: 3000
           envFrom:
