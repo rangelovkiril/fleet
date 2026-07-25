@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Infrastructure runbook (this wiki)
+    url: https://github.com/rangelovkiril/fleet/wiki
+    about: Cluster, Flux, secrets, Cloudflare, and the bootstrap procedure. Read before filing.
+  - name: Application code and API
+    url: https://github.com/rangelovkiril/rampme-software/issues
+    about: Backend or frontend behavior belongs in the app repository, not here.
+  - name: Hardware / firmware
+    url: https://github.com/rangelovkiril/rampme-hardware
+    about: Ramp firmware issues belong in the hardware repository.

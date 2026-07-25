@@ -1,0 +1,43 @@
+name: Task
+description: Operational work, tech debt, or documentation with a clear definition of done.
+title: "task: "
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Flux / GitOps
+        - Ingress and networking
+        - Cloudflare account (WAF, DNS, Pages, OpenTofu)
+        - Secrets and key management
+        - Cluster / k3s / storage
+        - CI and validation
+        - Recovery and bootstrap
+        - Documentation
+        - Security
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What needs doing and why. Link the relevant manifest, wiki page, or prior issue.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A checklist that defines when this is done.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: checkboxes
+    id: docs
+    attributes:
+      label: Documentation
+      options:
+        - label: This change alters infrastructure, deployment, configuration, or a documented contract, so the wiki must be updated in the same change.

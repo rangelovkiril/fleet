@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the cluster or its delivery path behaves incorrectly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is infrastructure only. If the API returns the wrong data but reaches the backend fine, file it in [rampme-software](https://github.com/rangelovkiril/rampme-software/issues) instead. Check the [wiki](https://github.com/rangelovkiril/fleet/wiki) first in case the behavior is expected.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Flux / reconciliation
+        - Ingress (Envoy Gateway, Cloudflare Tunnel)
+        - Cloudflare account (DNS, WAF, Pages, OpenTofu)
+        - Secrets / SOPS
+        - Cluster / k3s / storage
+        - Image automation
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What went wrong, and what was expected instead?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: |
+        Whatever shows the failure. Useful starting points: `flux get kustomizations`, `kubectl -n <namespace> get pods`, `kubectl describe` on the failing object, or a `tofu plan` diff. Redact tokens and never paste decrypted secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: when
+    attributes:
+      label: When it started
+      description: Time with timezone, and the commit or change it appeared after, if known.
+    validations:
+      required: false
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: api.rampme.site is serving traffic normally
+        - label: Ramp reservations are working

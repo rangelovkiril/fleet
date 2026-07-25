@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a new capability or an improvement to the infrastructure.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Flux / GitOps
+        - Ingress and networking
+        - Cloudflare account (WAF, DNS, Pages, OpenTofu)
+        - Secrets and key management
+        - Cluster / k3s / storage
+        - CI and validation
+        - Observability
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What gap does this address, and what breaks or stays risky without it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would change in this repository, and roughly how?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
