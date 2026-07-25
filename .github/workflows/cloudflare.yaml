@@ -11,11 +11,13 @@ on:
   pull_request:
     paths:
       - 'tofu/**'
+      - '!tofu/**/*.md'
       - '.github/workflows/cloudflare.yaml'
   push:
     branches: [main]
     paths:
       - 'tofu/**'
+      - '!tofu/**/*.md'
       - '.github/workflows/cloudflare.yaml'
 
 # The state is a committed file with no locking, so applies must never
