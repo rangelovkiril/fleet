@@ -135,16 +135,35 @@ jobs:
       - name: Apply
         run: sops exec-env encryption.sops.yaml 'tofu apply -input=false -no-color tofu.tfplan'
 
-      # [skip ci] matters: tofu/terraform.tfstate is inside this workflow's
-      # own path filter, so without it every apply would trigger another run.
+      # The encryption salt is regenerated on every write, so the file's bytes
+      # always differ even when the state did not change. Comparing them would
+      # commit after every apply. "serial" and "lineage" stay in plaintext and
+      # only move when the state really changed, so compare those instead.
+      #
+      # [skip ci] matters when a commit does happen: tofu/terraform.tfstate is
+      # inside this workflow's own path filter, and without it every apply
+      # would trigger another run.
       - name: Commit state
         run: |
-          if git diff --quiet -- terraform.tfstate; then
-            echo "State unchanged, nothing to commit." >> "$GITHUB_STEP_SUMMARY"
+          new_serial=$(jq -r '.serial' terraform.tfstate)
+          new_lineage=$(jq -r '.lineage' terraform.tfstate)
+
+          if git cat-file -e "HEAD:tofu/terraform.tfstate" 2>/dev/null; then
+            old_serial=$(git show "HEAD:tofu/terraform.tfstate" | jq -r '.serial')
+            old_lineage=$(git show "HEAD:tofu/terraform.tfstate" | jq -r '.lineage')
+          else
+            old_serial=""
+            old_lineage=""
+          fi
+
+          if [ "$new_serial" = "$old_serial" ] && [ "$new_lineage" = "$old_lineage" ]; then
+            echo "State unchanged at serial $new_serial, nothing to commit." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add terraform.tfstate
-          git commit -m "chore(cloudflare): update tofu state [skip ci]"
+          git commit -m "chore(cloudflare): update tofu state to serial ${new_serial} [skip ci]"
           git push
+          echo "State committed at serial $new_serial." >> "$GITHUB_STEP_SUMMARY"
