@@ -1,4 +1,23 @@
 creation_rules:
+  # Fully encrypted files: every value, not only data and stringData. Used
+  # for the OpenTofu state encryption passphrase, which is a bare top-level
+  # key rather than a Kubernetes Secret. Must come first, because SOPS
+  # applies the first matching rule.
+  #
+  # Not anchored to a directory, because SOPS matches this against the path
+  # as typed on the command line: an anchored pattern would fall through to
+  # the rule below when invoked from inside tofu/, and the passphrase would
+  # be written in plaintext. The leading [^/]+ is what stops this file, the
+  # config itself, from matching its own rule.
+  # Two recipients: the maintainer, and the key held by GitHub Actions as
+  # SOPS_AGE_KEY. The CI key is deliberately absent from the rule below, so
+  # a compromised runner can read the OpenTofu state passphrase but not the
+  # cluster secrets.
+  - path_regex: '[^/]+\.sops\.yaml$'
+    age: age1aa4n35h4ptkqpvtre9ees6z82wsevxpr28ctu4dmzszqy9d6kd3sf4mtlr,age1t97z3g9r4ysrupxjygd6cax2p5wffhe0klg9dj5vnw6cwkxhtp6q798ent
+
+  # Kubernetes Secrets: only the secret material is encrypted, so the rest
+  # of the manifest stays readable and diffable.
   - path_regex: .*.yaml
     encrypted_regex: ^(data|stringData)$
     age: age1aa4n35h4ptkqpvtre9ees6z82wsevxpr28ctu4dmzszqy9d6kd3sf4mtlr

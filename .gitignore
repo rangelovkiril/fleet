@@ -1,0 +1,15 @@
+# OpenTofu working directories and transient output under tofu/. The
+# dependency lock file (tofu/.terraform.lock.hcl) and the encrypted state
+# file (tofu/terraform.tfstate) are intentionally NOT covered by any of
+# these patterns: both are committed on purpose, see tofu/README.md.
+tofu/.terraform/
+tofu/crash.log
+tofu/crash.*.log
+tofu/*.tfplan
+tofu/*.tfplan.json
+
+# A saved plan written with "tofu plan -out=plan" has no extension, so the
+# patterns above do not catch it. Saved plans are encrypted but still
+# transient, and the state backup duplicates a file that is already tracked.
+tofu/plan
+tofu/*.tfstate.backup
