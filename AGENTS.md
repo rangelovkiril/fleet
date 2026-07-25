@@ -34,13 +34,21 @@ The [fleet wiki](https://github.com/rangelovkiril/fleet/wiki) is the authoritati
 
 ## Tooling (MCP)
 
-`.mcp.json` in the repo root declares three Cloudflare HTTP MCP servers:
+`.mcp.json` in the repo root declares four servers. Two need no credentials and should be treated as ordinary tools:
 
-- **`cloudflare-docs`** is public and needs no authentication.
-- **`cloudflare-observability`** and **`cloudflare-graphql`** are account-scoped and require an OAuth flow on first use in an interactive session.
+- **`context7`** provides current library documentation, launched through `bunx`. Consult it before writing OpenTofu, Cloudflare provider or Flux configuration from memory; these move faster than model training data and the exact resource and attribute names change between major versions.
+- **`cloudflare-docs`** is the public Cloudflare documentation, over HTTP, no authentication.
+
+The other two are account-scoped and reach the live Cloudflare account:
+
+- **`cloudflare-graphql`** returns real traffic analytics, which is what turns WAF rate limits into measurements rather than guesses.
+- **`cloudflare-auditlogs`** answers who changed what in the dashboard, which is how configuration drift away from `tofu/` gets attributed.
 
 > [!IMPORTANT]
-> MCP servers are started by the editor or host, not by the agent. Before relying on any of the three, check whether it is actually present in the current session. If one is missing, say which one and that it is enabled via `/mcp` in an interactive Claude Code session, rather than quietly guessing at Cloudflare state or fabricating an answer.
+> Only the maintainer can authorize the account-scoped servers, through an OAuth flow in an interactive session. They are therefore optional, never a prerequisite. Do not stop work, refuse a task, or ask for them to be enabled before starting. Do the part that can be done without them, and where one would genuinely have helped, say which server it was and what question it would have answered, so the choice to enable it is informed rather than a blanket request.
+
+> [!NOTE]
+> MCP servers are started by the editor or host, never by an agent. Check what is actually present in the session rather than assuming `.mcp.json` reflects it. When something is missing and it matters, the enabling step is `/mcp` in an interactive Claude Code session. Never fill the gap by guessing at Cloudflare state or presenting a plausible answer as fact.
 
 For local, one-off Cloudflare work outside of MCP, `bunx wrangler login` authenticates the Wrangler CLI.
 

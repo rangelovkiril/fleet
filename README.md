@@ -27,7 +27,7 @@ apps/
   lms/                        empty placeholder for a possible second, unrelated project
 tofu/                         OpenTofu configuration for the Cloudflare account
 .sops.yaml                    SOPS encryption rule
-.mcp.json                     Cloudflare MCP server declarations
+.mcp.json                     MCP server declarations, see AGENTS.md
 .gitignore                    OpenTofu working directories and transient output
 LICENSE
 ```
