@@ -15,8 +15,8 @@ spec:
         branch: main
     commit:
       author:
-        email: flux-fleet-app[bot]@users.noreply.github.com
-        name: flux-fleet-app
+        email: flux-fleet-app@users.noreply.github.com
+        name: Flux Bot
       messageTemplate: |
         chore(rampme): auto-update image tags
 
