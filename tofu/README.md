@@ -102,6 +102,9 @@ Both identifiers the configuration needs, the account id and the zone id, are de
 > [!CAUTION]
 > A local `tofu apply` bypasses the approval gate and can race the CI apply, because the local backend has no locking. Prefer the pipeline. If a local apply is unavoidable, make sure no workflow run is in flight and commit the resulting state immediately.
 
+> [!NOTE]
+> Every apply produces a state commit, even one that changed nothing. The encryption salt is regenerated on each write, so the file's bytes differ while its contents do not. A state commit is therefore not evidence that anything in Cloudflare changed; comparing `serial` and `lineage` between two versions tells the real story.
+
 CI needs two repository secrets. `SOPS_AGE_KEY` is a dedicated age private key, a different one from the maintainer's, added as a recipient on `tofu/*.sops.yaml` only, so a compromised runner cannot read the cluster secrets. `CLOUDFLARE_API_TOKEN` is a separate token from the local read-only one, carrying Edit rather than Read on the same three permissions, because CI is the only place that applies.
 
 > [!WARNING]

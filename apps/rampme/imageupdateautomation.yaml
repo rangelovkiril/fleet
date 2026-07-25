@@ -14,9 +14,15 @@ spec:
       ref:
         branch: main
     commit:
+      # GitHub attributes a commit to the app's bot account by the author
+      # email alone, in the form <user-id>+<login>@users.noreply.github.com.
+      # Dropping the numeric id or the "[bot]" suffix breaks that link and
+      # leaves the commit showing a nameless author. Recover the id after a
+      # rebootstrap with:
+      #   gh api '/users/<app-slug>[bot]' --jq .id
       author:
-        email: flux-fleet-app@users.noreply.github.com
-        name: Flux Bot
+        email: 308457385+flux-fleet-app[bot]@users.noreply.github.com
+        name: flux-fleet-app
       messageTemplate: |
         chore(rampme): auto-update image tags
 
