@@ -34,13 +34,17 @@ The Cloudflare provider reads the token from the `CLOUDFLARE_API_TOKEN` environm
 export CLOUDFLARE_API_TOKEN="paste the token here"
 ```
 
-Read access is enough to plan. The permissions the current resources need:
+Tokens are created under My Profile, API Tokens, Create Token, Custom token. Each permission is a row of three dropdowns: the category, the permission group, and the access level. Written as `category / group / level`, the rows this configuration needs are:
 
-- **Account, Cloudflare Tunnel.** Covers `cloudflare_zero_trust_tunnel_cloudflared` and `cloudflare_zero_trust_tunnel_cloudflared_config`. Depending on account age this may instead be listed as **Cloudflare One Connector: cloudflared**.
-- **Zone, DNS.** Covers `cloudflare_dns_record`.
-- **Account, Pages.** Covers `cloudflare_pages_project` and `cloudflare_pages_domain`.
+- `Account / Cloudflare Tunnel / Edit` covers `cloudflare_zero_trust_tunnel_cloudflared` and `cloudflare_zero_trust_tunnel_cloudflared_config`. Some accounts list this group as `Cloudflare One Connector: cloudflared` instead; either is the same thing.
+- `Account / Cloudflare Pages / Edit` covers `cloudflare_pages_project` and `cloudflare_pages_domain`.
+- `Zone / DNS / Edit` covers `cloudflare_dns_record`.
 
-Scope the token to account `128bba3db2913a3022728e0278795ac6` and to the `rampme.site` zone specifically, not to all zones.
+Under Account Resources include account `128bba3db2913a3022728e0278795ac6`, and under Zone Resources include the specific zone `rampme.site` rather than all zones.
+
+`Zone / Zone / Read` is not required, because `zone_id` is hardcoded in `variables.tf` and no zone lookup happens. Add it only if a plan ever fails resolving the zone.
+
+Use `Read` in place of `Edit` on all three rows for a local token that only ever plans. The token CI holds is a separate one with `Edit`, because CI is the only place that applies.
 
 > [!NOTE]
 > A missing scope surfaces as a bare `401 Not authorized` with error code 1001, or a `403` with code 10000, on the API endpoint for the resource being read. Neither mentions permissions, so those errors mean a token scope is missing rather than a resource being absent.

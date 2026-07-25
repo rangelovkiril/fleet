@@ -1,0 +1,148 @@
+# Cloudflare account, managed with OpenTofu.
+#
+# Every pull request touching tofu/ gets a plan in its job summary. On main
+# the apply job runs the exact plan the reviewer saw, behind the manual
+# approval gate on the production environment, then commits the resulting
+# encrypted state back.
+
+name: Cloudflare
+
+on:
+  pull_request:
+    paths:
+      - 'tofu/**'
+      - '.github/workflows/cloudflare.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'tofu/**'
+      - '.github/workflows/cloudflare.yaml'
+
+# The state is a committed file with no locking, so applies must never
+# overlap. The group is deliberately not scoped to a ref, and runs queue
+# rather than cancel, because cancelling a half-finished apply is worse
+# than waiting for it.
+concurrency:
+  group: cloudflare-tofu
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TOFU_VERSION: '1.12.1'
+  SOPS_VERSION: 'v3.13.2'
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tofu
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+
+      - name: Install sops
+        run: |
+          curl -sSfL -o /tmp/sops \
+            "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+
+      - run: tofu fmt -check -diff
+
+      - name: Init
+        run: sops exec-env encryption.sops.yaml 'tofu init -input=false'
+
+      - name: Validate
+        run: sops exec-env encryption.sops.yaml 'tofu validate'
+
+      # The saved plan is encrypted by the same key as the state, so it is
+      # safe to hand to the apply job as an artifact.
+      - name: Plan
+        run: |
+          sops exec-env encryption.sops.yaml \
+            'tofu plan -input=false -no-color -out=tofu.tfplan' | tee plan.txt
+
+      - name: Publish plan to the job summary
+        run: |
+          {
+            echo '### OpenTofu plan'
+            echo '```'
+            tail -n 100 plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: tofu-plan
+          path: tofu/tofu.tfplan
+          retention-days: 7
+
+  apply:
+    name: Apply
+    needs: plan
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Manual approval gate. The production environment carries a required
+    # reviewer, so nothing reaches the live account without a person.
+    environment:
+      name: production
+      url: https://dash.cloudflare.com
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: tofu
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: ${{ env.TOFU_VERSION }}
+
+      - name: Install sops
+        run: |
+          curl -sSfL -o /tmp/sops \
+            "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tofu-plan
+          path: tofu
+
+      - name: Init
+        run: sops exec-env encryption.sops.yaml 'tofu init -input=false'
+
+      # Applying the saved plan rather than replanning guarantees that what
+      # runs is exactly what was approved.
+      - name: Apply
+        run: sops exec-env encryption.sops.yaml 'tofu apply -input=false -no-color tofu.tfplan'
+
+      # [skip ci] matters: tofu/terraform.tfstate is inside this workflow's
+      # own path filter, so without it every apply would trigger another run.
+      - name: Commit state
+        run: |
+          if git diff --quiet -- terraform.tfstate; then
+            echo "State unchanged, nothing to commit." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add terraform.tfstate
+          git commit -m "chore(cloudflare): update tofu state [skip ci]"
+          git push
