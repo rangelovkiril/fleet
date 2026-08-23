@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260822225619 # {"$imagepolicy": "rampme:rampme-backend"}
+          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260823155640 # {"$imagepolicy": "rampme:rampme-backend"}
           envFrom:
             - secretRef:
                 name: rampme-backend-secret
