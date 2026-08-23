@@ -24,6 +24,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "rampme_backend" {
         hostname = "api.rampme.site"
         service  = "http://eg-envoy.envoy-gateway-system.svc.cluster.local:80"
       },
+      # Stage backend. Same Envoy Gateway Service as production; the
+      # rampme-api-stage listener there does the host-based routing to
+      # backend-stage.
+      {
+        hostname = "api-stage.rampme.site"
+        service  = "http://eg-envoy.envoy-gateway-system.svc.cluster.local:80"
+      },
       # A remotely-managed config is rejected without a trailing catch-all.
       {
         service = "http_status:404"
