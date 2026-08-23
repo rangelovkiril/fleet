@@ -1,0 +1,10 @@
+- op: replace
+  path: /metadata/name
+  value: rampme-backend-stage
+- op: add
+  path: /metadata/labels
+  value:
+    app: rampme-backend-stage
+- op: replace
+  path: /spec/selector/app
+  value: rampme-backend-stage

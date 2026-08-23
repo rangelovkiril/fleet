@@ -1,0 +1,14 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: rampme-backend-stage
+  namespace: rampme
+spec:
+  imageRepositoryRef:
+    name: rampme-backend-stage
+  filterTags:
+    pattern: '^stage-(?P<ts>[0-9]+)$'
+    extract: '$ts'
+  policy:
+    numerical:
+      order: asc

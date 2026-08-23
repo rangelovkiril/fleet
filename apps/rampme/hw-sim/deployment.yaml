@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hw-sim
+  namespace: rampme
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: hw-sim
+  template:
+    metadata:
+      labels:
+        app: hw-sim
+    spec:
+      containers:
+        - name: hw-sim
+          image: ghcr.io/rangelovkiril/hacktues12-hw-sim:stage-0 # {"$imagepolicy": "rampme:hw-sim"}
+          ports:
+            - containerPort: 1883
+            - containerPort: 4000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 15

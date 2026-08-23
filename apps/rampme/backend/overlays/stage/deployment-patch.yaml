@@ -1,0 +1,29 @@
+# JSON6902, not strategic merge: strategic merge can't rename an object (its
+# own metadata.name is the merge key), so renaming rampme-backend ->
+# rampme-backend-stage needs an explicit `replace` op.
+- op: replace
+  path: /metadata/name
+  value: rampme-backend-stage
+- op: add
+  path: /metadata/labels
+  value:
+    app: rampme-backend-stage
+- op: replace
+  path: /spec/selector/matchLabels/app
+  value: rampme-backend-stage
+- op: replace
+  path: /spec/template/metadata/labels/app
+  value: rampme-backend-stage
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: ghcr.io/rangelovkiril/hacktues12-backend:stage-0 # {"$imagepolicy": "rampme:rampme-backend-stage"}
+- op: add
+  path: /spec/template/spec/containers/0/env
+  value:
+    # hw-sim accepts unauthenticated connections, so no MQTT credentials here
+    # (unlike overlays/production/secret.yaml).
+    - name: MQTT_URL
+      value: mqtt://hw-sim:1883
+- op: replace
+  path: /spec/template/spec/volumes/0/persistentVolumeClaim/claimName
+  value: rampme-backend-stage-data

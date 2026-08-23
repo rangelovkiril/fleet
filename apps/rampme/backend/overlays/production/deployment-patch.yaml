@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rampme-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260822225619 # {"$imagepolicy": "rampme:rampme-backend"}
+          envFrom:
+            - secretRef:
+                name: rampme-backend-secret

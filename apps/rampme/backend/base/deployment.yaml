@@ -1,3 +1,7 @@
+# Shared shape for both the production and stage backend Deployments. Each
+# overlay patches in: the image (with its own $imagepolicy marker), how MQTT
+# credentials reach the container (secretRef for production, a plain env var
+# for stage since hw-sim is unauthenticated), and the PVC it mounts.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -17,12 +21,9 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/rangelovkiril/hacktues12-backend:prod-20260822225619 # {"$imagepolicy": "rampme:rampme-backend"}
+          image: ghcr.io/rangelovkiril/hacktues12-backend:unset
           ports:
             - containerPort: 3000
-          envFrom:
-            - secretRef:
-                name: rampme-backend-secret
           volumeMounts:
             - name: data
               mountPath: /app/data
