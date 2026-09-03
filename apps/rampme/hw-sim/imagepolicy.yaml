@@ -1,11 +1,11 @@
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
-  name: hw-sim
+  name: rampme-hw-sim
   namespace: rampme
 spec:
   imageRepositoryRef:
-    name: hw-sim
+    name: rampme-hw-sim
   filterTags:
     pattern: '^stage-(?P<ts>[0-9]+)$'
     extract: '$ts'
