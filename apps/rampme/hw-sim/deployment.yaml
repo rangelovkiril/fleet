@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: hw-sim
-          image: ghcr.io/rangelovkiril/hacktues12-hw-sim:stage-20260824155552 # {"$imagepolicy": "rampme:hw-sim"}
+          image: ghcr.io/rangelovkiril/hacktues12-hw-sim:stage-20260903094247 # {"$imagepolicy": "rampme:hw-sim"}
           ports:
             - containerPort: 1883
             - containerPort: 4000
