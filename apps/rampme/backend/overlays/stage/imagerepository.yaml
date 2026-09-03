@@ -4,5 +4,5 @@ metadata:
   name: rampme-backend-stage
   namespace: rampme
 spec:
-  image: ghcr.io/rangelovkiril/hacktues12-backend
+  image: ghcr.io/rangelovkiril/rampme-backend
   interval: 5m
