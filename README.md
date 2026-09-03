@@ -56,10 +56,10 @@ flux-system            (clusters/hetzner)
 
 The `flux-system` GitRepository polls `main` every `1m0s`. Every Kustomization has `interval: 10m`, meaning that even with no new commit, Flux re-applies and corrects drift at least that often. The envoy-gateway HelmRelease and HelmRepository use `interval: 1h`. The image automation objects (ImageRepository, ImagePolicy) use `interval: 5m`, and ImageUpdateAutomation also uses `5m`.
 
-In practice: a commit pushed to `main` is picked up by the GitRepository within a minute, and the affected Kustomization reconciles immediately after, not after a full 10 minute wait. New backend images are a separate loop: the application's CI publishes `prod-<timestamp>` tags to `ghcr.io`, the `rampme-backend` ImagePolicy picks the numerically highest tag matching `^prod-(?P<ts>[0-9]+)$`, and the ImageUpdateAutomation commits the new tag into `apps/rampme/backend/deployment.yaml` on `main`, which then flows through the same Kustomization chain.
+In practice: a commit pushed to `main` is picked up by the GitRepository within a minute, and the affected Kustomization reconciles immediately after, not after a full 10 minute wait. New images are a separate loop: the application's CI publishes `prod-<timestamp>`/`stage-<timestamp>` tags to `ghcr.io`, an ImagePolicy per deployment (`rampme-backend`, `rampme-backend-stage`, `rampme-hw-sim`) picks the numerically highest matching tag, and the ImageUpdateAutomation commits the new tag into that deployment's manifest on `main` - `apps/rampme/backend/overlays/production/deployment-patch.yaml`, `overlays/stage/deployment-patch.yaml`, or `apps/rampme/hw-sim/deployment.yaml` - which then flows through the same Kustomization chain.
 
 > [!WARNING]
-> Never hand-edit the image tag in `apps/rampme/backend/deployment.yaml`. The `# {"$imagepolicy": "rampme:rampme-backend"}` marker on that line is managed by Flux; a manual edit will be overwritten or will conflict with the next automated commit.
+> Never hand-edit an image tag carrying a `$imagepolicy` marker (`apps/rampme/backend/overlays/{production,stage}/deployment-patch.yaml`, `apps/rampme/hw-sim/deployment.yaml`). Each marker is managed by Flux; a manual edit will be overwritten or will conflict with the next automated commit.
 
 ## Validating manifests locally
 
