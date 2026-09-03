@@ -16,14 +16,14 @@
   value: rampme-backend-stage
 - op: replace
   path: /spec/template/spec/containers/0/image
-  value: ghcr.io/rangelovkiril/hacktues12-backend:stage-20260823154141 # {"$imagepolicy": "rampme:rampme-backend-stage"}
+  value: ghcr.io/rangelovkiril/rampme-backend:stage-20260903120157 # {"$imagepolicy": "rampme:rampme-backend-stage"}
 - op: add
   path: /spec/template/spec/containers/0/env
   value:
     # hw-sim accepts unauthenticated connections, so no MQTT credentials here
     # (unlike overlays/production/secret.yaml).
     - name: MQTT_URL
-      value: mqtt://hw-sim:1883
+      value: mqtt://rampme-hw-sim:1883
 - op: replace
   path: /spec/template/spec/volumes/0/persistentVolumeClaim/claimName
   value: rampme-backend-stage-data

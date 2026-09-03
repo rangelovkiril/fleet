@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hw-sim
+  name: rampme-hw-sim
   namespace: rampme
 spec:
   selector:
-    app: hw-sim
+    app: rampme-hw-sim
   ports:
     - name: mqtt
       port: 1883

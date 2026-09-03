@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/rangelovkiril/hacktues12-backend:unset
+          image: ghcr.io/rangelovkiril/rampme-backend:unset
           ports:
             - containerPort: 3000
           volumeMounts:
