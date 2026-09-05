@@ -9,10 +9,10 @@ This directory is not reconciled by Flux. Flux only watches `./clusters/hetzner`
 - The `rampme-backend` Cloudflare Tunnel and its remotely-managed ingress config (`tunnel.tf`).
 - The `api.rampme.site` DNS record that points at the tunnel (`dns.tf`).
 - The `rampme` Cloudflare Pages project and its `rampme.site` custom domain attachment (`pages.tf`).
+- Per-IP rate limiting on the ramp reservation create/cancel routes, covering both `api.rampme.site` and `api-stage.rampme.site` (`waf.tf`, issue #1). The `CLOUDFLARE_API_TOKEN` permission this needs (`Zone / Zone WAF / Edit`) was missing on first apply — see "Supplying the API token" below.
 
 ## What is deliberately not managed here
 
-- **WAF rules.** Tracked as issue #1. `cloudflare_ruleset` resources belong in this directory once that work starts. There are effectively no custom WAF rules today.
 - **The Pages deployments themselves.** The frontend CI in the `rampme-software` repository publishes to the `rampme` project; this configuration tracks the project and domain settings, not builds or deployments.
 - **The in-cluster side of the tunnel**, meaning the `cloudflared` Deployment and the `cloudflared-token` SOPS secret. Those are Kubernetes manifests under `infrastructure/controllers/cloudflared/`.
 - **Everything else in the account.** Only the resources listed above are declared. Zone settings, email routing and the rest remain dashboard state.
@@ -39,6 +39,7 @@ Tokens are created under My Profile, API Tokens, Create Token, Custom token. Eac
 - `Account / Cloudflare Tunnel / Edit` covers `cloudflare_zero_trust_tunnel_cloudflared` and `cloudflare_zero_trust_tunnel_cloudflared_config`. Some accounts list this group as `Cloudflare One Connector: cloudflared` instead; either is the same thing.
 - `Account / Cloudflare Pages / Edit` covers `cloudflare_pages_project` and `cloudflare_pages_domain`.
 - `Zone / DNS / Edit` covers `cloudflare_dns_record`.
+- `Zone / Zone WAF / Edit` covers `cloudflare_ruleset` (rate limiting and other zone-level rules). Missing this scope is exactly what the 403/code 10000 note below describes: the first apply of `waf.tf` failed with that error until this row was added to CI's token.
 
 Under Account Resources include account `128bba3db2913a3022728e0278795ac6`, and under Zone Resources include the specific zone `rampme.site` rather than all zones.
 
@@ -105,7 +106,7 @@ Both identifiers the configuration needs, the account id and the zone id, are de
 > [!NOTE]
 > The encryption salt is regenerated on every write, so `terraform.tfstate` differs byte for byte after each apply even when nothing changed. The pipeline therefore compares the plaintext `serial` and `lineage` fields, which only move when the state really changed, and commits only then. A state commit is real evidence of a change; the absence of one is not evidence that the apply failed.
 
-CI needs two repository secrets. `SOPS_AGE_KEY` is a dedicated age private key, a different one from the maintainer's, added as a recipient on `tofu/*.sops.yaml` only, so a compromised runner cannot read the cluster secrets. `CLOUDFLARE_API_TOKEN` is a separate token from the local read-only one, carrying Edit rather than Read on the same three permissions, because CI is the only place that applies.
+CI needs two repository secrets. `SOPS_AGE_KEY` is a dedicated age private key, a different one from the maintainer's, added as a recipient on `tofu/*.sops.yaml` only, so a compromised runner cannot read the cluster secrets. `CLOUDFLARE_API_TOKEN` is a separate token from the local read-only one, carrying Edit rather than Read on the same four permissions, because CI is the only place that applies.
 
 > [!WARNING]
 > The tunnel is the dangerous resource. If a plan ever proposes **replacing** `cloudflare_zero_trust_tunnel_cloudflared` rather than updating it in place, do not apply. A replace rotates the tunnel token, and `api.rampme.site` stays down until the `cloudflared-token` secret in `infrastructure/controllers/cloudflared/token-secret.yaml` is re-encrypted with the new token and rolled out.
