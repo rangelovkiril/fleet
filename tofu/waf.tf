@@ -6,9 +6,9 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
   phase       = "http_ratelimit"
 
   # This account's plan tier allows exactly 1 rule in the http_ratelimit
-  # phase (API error code 50001) and only a 10s period, not 60s ("not
-  # entitled to use the period 60, can only use a period among [10]") -
-  # neither is documented anywhere checkable beforehand. Create and cancel
+  # phase (API error code 50001), only a 10s period (not 60s), and a
+  # mitigation_timeout that must match the period (also 10, not 60) - none
+  # of this is documented anywhere checkable beforehand. Create and cancel
   # share one rule/one counter, and 5 requests/10s is the closest available
   # approximation of the original 20-requests-per-60s design threshold.
   rules = [
@@ -21,7 +21,7 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
         characteristics     = ["ip.src", "cf.colo.id"]
         period              = 10
         requests_per_period = 5
-        mitigation_timeout  = 60
+        mitigation_timeout  = 10
       }
     },
   ]
