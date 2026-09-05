@@ -6,10 +6,11 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
   phase       = "http_ratelimit"
 
   # This account's plan tier allows exactly 1 rule in the http_ratelimit
-  # phase (confirmed via API error code 50001, not documented anywhere we
-  # could check beforehand). Create and cancel share one rule/one counter
-  # instead of a rule each, so the 20/min budget below is combined across
-  # both, not 20/min per route.
+  # phase (API error code 50001) and only a 10s period, not 60s ("not
+  # entitled to use the period 60, can only use a period among [10]") -
+  # neither is documented anywhere checkable beforehand. Create and cancel
+  # share one rule/one counter, and 5 requests/10s is the closest available
+  # approximation of the original 20-requests-per-60s design threshold.
   rules = [
     {
       description = "Rate limit ramp reservation create/cancel"
@@ -18,8 +19,8 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
       enabled     = true
       ratelimit = {
         characteristics     = ["ip.src", "cf.colo.id"]
-        period              = 60
-        requests_per_period = 20
+        period              = 10
+        requests_per_period = 5
         mitigation_timeout  = 60
       }
     },
