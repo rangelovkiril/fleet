@@ -12,7 +12,7 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
       action      = "block"
       enabled     = true
       ratelimit = {
-        characteristics     = ["ip.src"]
+        characteristics     = ["ip.src", "cf.colo.id"]
         period              = 60
         requests_per_period = 20
         mitigation_timeout  = 60
@@ -24,7 +24,7 @@ resource "cloudflare_ruleset" "ramp_rate_limit" {
       action      = "block"
       enabled     = true
       ratelimit = {
-        characteristics     = ["ip.src"]
+        characteristics     = ["ip.src", "cf.colo.id"]
         period              = 60
         requests_per_period = 20
         mitigation_timeout  = 60
