@@ -28,7 +28,7 @@ The [fleet wiki](https://github.com/rangelovkiril/fleet/wiki) is the authoritati
 - **Use tools according to availability.** Do not assume a fixed toolchain; adapt to what the environment actually has. Prefer `bunx <pkg>` over a globally installed package.
 - **Conventional Commits**, matching the existing history (`feat(scope): ...`, `fix(scope): ...`, `chore(scope): ...`, `refactor: ...`).
 - **Branch plus PR is the norm, but the maintainer currently commits directly to `main`.** Ask before committing, and ask again before pushing. Never do either unprompted.
-- **Do not hand-edit Flux-managed image tags.** The `# {"$imagepolicy": "rampme:rampme-backend"}` marker in `apps/rampme/backend/deployment.yaml` is owned by the ImageUpdateAutomation controller; a manual edit will be overwritten or conflict with its next commit.
+- **Do not hand-edit Flux-managed image tags.** Each `$imagepolicy` marker (`apps/rampme/backend/overlays/{production,stage}/deployment-patch.yaml`, `apps/rampme/hw-sim/deployment.yaml`) is owned by the ImageUpdateAutomation controller; a manual edit will be overwritten or conflict with its next commit.
 - **Never commit plaintext secrets.** Check every diff to `apps/rampme/backend/secret.yaml`; it must only ever be committed SOPS-encrypted, never with plaintext `stringData`.
 - **Do not state a fact that has not been verified.** If something is missing, an exact command, an identifier, a path, say so explicitly and mark it TODO rather than filling it with a plausible guess.
 
@@ -58,7 +58,7 @@ For local, one-off Cloudflare work outside of MCP, `bunx wrangler login` authent
 > **1. `apps/rampme/backend/secret.yaml` ships `REPLACE_ME` placeholders in plaintext `stringData`.** Real MQTT credentials must be filled in and SOPS-encrypted (`sops -e -i apps/rampme/backend/secret.yaml`) before any commit. Check every diff touching this file.
 
 > [!WARNING]
-> **2. Never hand-edit the image tag in `apps/rampme/backend/deployment.yaml`.** The `# {"$imagepolicy": "rampme:rampme-backend"}` marker is managed by Flux's image automation, which commits tag updates back to `main` on its own.
+> **2. Never hand-edit an image tag carrying a `$imagepolicy` marker** (`apps/rampme/backend/overlays/{production,stage}/deployment-patch.yaml`, `apps/rampme/hw-sim/deployment.yaml`). Each marker is managed by Flux's image automation, which commits tag updates back to `main` on its own.
 
 > [!NOTE]
 > **3. The tunnel's ingress hostname mapping is not in the Kubernetes manifests.** Reading only the YAML in `infrastructure/controllers/cloudflared` will not reveal that `api.rampme.site` routes to `eg-envoy`. That mapping is declared in OpenTofu, in `tofu/tunnel.tf`, which is applied by hand and never by Flux.
