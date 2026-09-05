@@ -10,10 +10,10 @@ This directory is not reconciled by Flux. Flux only watches `./clusters/hetzner`
 - The `api.rampme.site` DNS record that points at the tunnel (`dns.tf`).
 - The `rampme` Cloudflare Pages project and its `rampme.site` custom domain attachment (`pages.tf`).
 - Per-IP rate limiting on the ramp reservation create/cancel routes, covering both `api.rampme.site` and `api-stage.rampme.site` (`waf.tf`, issue #1). The `CLOUDFLARE_API_TOKEN` permission this needs (`Zone / Zone WAF / Edit`) was missing on first apply — see "Supplying the API token" below.
-- Bot Fight Mode at the zone level (`bot.tf`, issue #1). Needs its own separate `Zone / Bot Management / Edit` scope, also missing on first apply. `cloudflare_bot_management` cannot be destroyed by OpenTofu once created — toggling `fight_mode` is the only rollback, not removing the resource.
 
 ## What is deliberately not managed here
 
+- **Bot Fight Mode.** Tried as `cloudflare_bot_management`/`bot.tf` (issue #1) and abandoned: `PUT .../bot_management` returns `403`, code 10000, even with `Zone / Bot Management / Edit` on the token. Cloudflare's own Bot Fight Mode setup docs only document a dashboard procedure (Security Settings → Bot traffic → Bot fight mode), never an API call, and community reports describe the same "not entitled" failure on this endpoint on Free-plan zones regardless of token scope — this reads as a plan/entitlement gate on the API itself, not a permission gap. Enabled by hand in the dashboard instead; toggle it there if it ever needs to change.
 - **The Pages deployments themselves.** The frontend CI in the `rampme-software` repository publishes to the `rampme` project; this configuration tracks the project and domain settings, not builds or deployments.
 - **The in-cluster side of the tunnel**, meaning the `cloudflared` Deployment and the `cloudflared-token` SOPS secret. Those are Kubernetes manifests under `infrastructure/controllers/cloudflared/`.
 - **Everything else in the account.** Only the resources listed above are declared. Zone settings, email routing and the rest remain dashboard state.
@@ -41,7 +41,6 @@ Tokens are created under My Profile, API Tokens, Create Token, Custom token. Eac
 - `Account / Cloudflare Pages / Edit` covers `cloudflare_pages_project` and `cloudflare_pages_domain`.
 - `Zone / DNS / Edit` covers `cloudflare_dns_record`.
 - `Zone / Zone WAF / Edit` covers `cloudflare_ruleset` (rate limiting and other zone-level rules). Missing this scope is exactly what the 403/code 10000 note below describes: the first apply of `waf.tf` failed with that error until this row was added to CI's token.
-- `Zone / Bot Management / Edit` covers `cloudflare_bot_management` (`bot.tf`). A separate scope from Zone WAF above, not covered by it — same 403/code 10000 failure mode, discovered the same way.
 
 Under Account Resources include account `128bba3db2913a3022728e0278795ac6`, and under Zone Resources include the specific zone `rampme.site` rather than all zones.
 
