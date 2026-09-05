@@ -10,6 +10,7 @@ This directory is not reconciled by Flux. Flux only watches `./clusters/hetzner`
 - The `api.rampme.site` DNS record that points at the tunnel (`dns.tf`).
 - The `rampme` Cloudflare Pages project and its `rampme.site` custom domain attachment (`pages.tf`).
 - Per-IP rate limiting on the ramp reservation create/cancel routes, covering both `api.rampme.site` and `api-stage.rampme.site` (`waf.tf`, issue #1). The `CLOUDFLARE_API_TOKEN` permission this needs (`Zone / Zone WAF / Edit`) was missing on first apply — see "Supplying the API token" below.
+- Bot Fight Mode at the zone level (`bot.tf`, issue #1). Needs its own separate `Zone / Bot Management / Edit` scope, also missing on first apply. `cloudflare_bot_management` cannot be destroyed by OpenTofu once created — toggling `fight_mode` is the only rollback, not removing the resource.
 
 ## What is deliberately not managed here
 
@@ -40,12 +41,13 @@ Tokens are created under My Profile, API Tokens, Create Token, Custom token. Eac
 - `Account / Cloudflare Pages / Edit` covers `cloudflare_pages_project` and `cloudflare_pages_domain`.
 - `Zone / DNS / Edit` covers `cloudflare_dns_record`.
 - `Zone / Zone WAF / Edit` covers `cloudflare_ruleset` (rate limiting and other zone-level rules). Missing this scope is exactly what the 403/code 10000 note below describes: the first apply of `waf.tf` failed with that error until this row was added to CI's token.
+- `Zone / Bot Management / Edit` covers `cloudflare_bot_management` (`bot.tf`). A separate scope from Zone WAF above, not covered by it — same 403/code 10000 failure mode, discovered the same way.
 
 Under Account Resources include account `128bba3db2913a3022728e0278795ac6`, and under Zone Resources include the specific zone `rampme.site` rather than all zones.
 
 `Zone / Zone / Read` is not required, because `zone_id` is hardcoded in `variables.tf` and no zone lookup happens. Add it only if a plan ever fails resolving the zone.
 
-Use `Read` in place of `Edit` on all three rows for a local token that only ever plans. The token CI holds is a separate one with `Edit`, because CI is the only place that applies.
+Use `Read` in place of `Edit` on all rows for a local token that only ever plans. The token CI holds is a separate one with `Edit`, because CI is the only place that applies.
 
 > [!NOTE]
 > A missing scope surfaces as a bare `401 Not authorized` with error code 1001, or a `403` with code 10000, on the API endpoint for the resource being read. Neither mentions permissions, so those errors mean a token scope is missing rather than a resource being absent.
@@ -106,7 +108,7 @@ Both identifiers the configuration needs, the account id and the zone id, are de
 > [!NOTE]
 > The encryption salt is regenerated on every write, so `terraform.tfstate` differs byte for byte after each apply even when nothing changed. The pipeline therefore compares the plaintext `serial` and `lineage` fields, which only move when the state really changed, and commits only then. A state commit is real evidence of a change; the absence of one is not evidence that the apply failed.
 
-CI needs two repository secrets. `SOPS_AGE_KEY` is a dedicated age private key, a different one from the maintainer's, added as a recipient on `tofu/*.sops.yaml` only, so a compromised runner cannot read the cluster secrets. `CLOUDFLARE_API_TOKEN` is a separate token from the local read-only one, carrying Edit rather than Read on the same four permissions, because CI is the only place that applies.
+CI needs two repository secrets. `SOPS_AGE_KEY` is a dedicated age private key, a different one from the maintainer's, added as a recipient on `tofu/*.sops.yaml` only, so a compromised runner cannot read the cluster secrets. `CLOUDFLARE_API_TOKEN` is a separate token from the local read-only one, carrying Edit rather than Read on the same permissions, because CI is the only place that applies.
 
 > [!WARNING]
 > The tunnel is the dangerous resource. If a plan ever proposes **replacing** `cloudflare_zero_trust_tunnel_cloudflared` rather than updating it in place, do not apply. A replace rotates the tunnel token, and `api.rampme.site` stays down until the `cloudflared-token` secret in `infrastructure/controllers/cloudflared/token-secret.yaml` is re-encrypted with the new token and rolled out.
