@@ -2,6 +2,8 @@
 # overlay patches in: the image (with its own $imagepolicy marker), how MQTT
 # credentials reach the container (secretRef for production, a plain env var
 # for stage since hw-sim is unauthenticated), and the PVC it mounts.
+# accessibility-data is common to both: same ConfigMap, same namespace,
+# populated by overlays/production/cronjob.yaml.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,9 +26,15 @@ spec:
           image: ghcr.io/rangelovkiril/rampme-backend:unset
           ports:
             - containerPort: 3000
+          env:
+            - name: RAMP_ACCESSIBILITY_DATA_PATH
+              value: /app/accessibility-data/vehicle-accessibility.json
           volumeMounts:
             - name: data
               mountPath: /app/data
+            - name: accessibility-data
+              mountPath: /app/accessibility-data
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /health
@@ -41,3 +49,7 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: rampme-backend-data
+        - name: accessibility-data
+          configMap:
+            name: rampme-backend-accessibility-data
+            optional: true # not created until cronjob.yaml's first run
