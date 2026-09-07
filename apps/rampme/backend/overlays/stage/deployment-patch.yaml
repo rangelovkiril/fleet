@@ -20,9 +20,11 @@
 - op: add
   path: /spec/template/spec/containers/0/env
   value:
-    # hw-sim accepts unauthenticated connections, so no MQTT credentials here
-    # (unlike overlays/production/secret.yaml).
-    - name: MQTT_URL
+    # replaces base's env wholesale (JSON6902 add on an existing key), so
+    # RAMP_ACCESSIBILITY_DATA_PATH must be repeated here too, not just added.
+    - name: RAMP_ACCESSIBILITY_DATA_PATH
+      value: /app/accessibility-data/vehicle-accessibility.json
+    - name: MQTT_URL # hw-sim is unauthenticated, unlike overlays/production/secret.yaml
       value: mqtt://rampme-hw-sim:1883
 - op: replace
   path: /spec/template/spec/volumes/0/persistentVolumeClaim/claimName

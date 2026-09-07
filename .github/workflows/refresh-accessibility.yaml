@@ -1,0 +1,49 @@
+# Refreshes apps/rampme/backend/accessibility-refresh/configmap.yaml from
+# trinmo.org's fleet registry and commits it straight to main; Flux applies
+# it from there like any other change. The crawl+join script lives outside
+# both repos as a gist (small, dependency-free, doesn't need
+# rampme-software's TypeScript/test machinery) and fetches
+# rampme-software's curated model-accessibility.json over HTTP for the join
+# — see rampme-software's openspec/changes/ramp-vehicle-accessibility.
+
+name: Refresh accessibility data
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # weekly, Monday 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CONFIGMAP_PATH: apps/rampme/backend/accessibility-refresh/configmap.yaml
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: |
+          curl -fsSL https://gist.githubusercontent.com/rangelovkiril/8288bc4d272915fe86414526242fb276/raw/refresh-accessibility.mjs \
+            | node --input-type=module - /tmp/vehicle-accessibility.json
+          {
+            echo "apiVersion: v1"
+            echo "kind: ConfigMap"
+            echo "metadata:"
+            echo "  name: rampme-backend-accessibility-data"
+            echo "  namespace: rampme"
+            echo "data:"
+            echo "  vehicle-accessibility.json: |"
+            sed 's/^/    /' /tmp/vehicle-accessibility.json
+          } > "$CONFIGMAP_PATH"
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore(rampme): refresh vehicle accessibility data [skip ci]'
+          file_pattern: ${{ env.CONFIGMAP_PATH }}

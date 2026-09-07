@@ -4,5 +4,6 @@ resources:
   - namespace.yaml
   - backend/overlays/production
   - backend/overlays/stage
+  - backend/accessibility-refresh
   - hw-sim
   - imageupdateautomation.yaml
