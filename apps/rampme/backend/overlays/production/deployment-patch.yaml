@@ -10,4 +10,4 @@ spec:
           image: ghcr.io/rangelovkiril/rampme-backend:prod-20260908170020 # {"$imagepolicy": "rampme:rampme-backend"}
           envFrom:
             - secretRef:
-                name: rampme-backend-secret
+                name: mqtt-broker-credentials
