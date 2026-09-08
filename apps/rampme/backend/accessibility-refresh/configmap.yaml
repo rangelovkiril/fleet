@@ -1,6 +1,3 @@
-# Auto-refreshed weekly by .github/workflows/refresh-accessibility.yaml
-# (crawl script: https://gist.github.com/rangelovkiril/8288bc4d272915fe86414526242fb276).
-# Hand-editing is safe but pointless — the next scheduled run overwrites it.
 apiVersion: v1
 kind: ConfigMap
 metadata:
